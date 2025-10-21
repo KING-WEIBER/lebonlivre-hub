@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart, Search, Menu, BookOpen } from "lucide-react";
+import { ShoppingCart, Search, Menu, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
 
@@ -32,6 +32,16 @@ export const Header = () => {
           </Button>
           <Button variant="ghost" size="icon" className="transition-smooth hover:text-accent">
             <ShoppingCart className="h-5 w-5" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="transition-smooth hover:text-accent"
+            asChild
+          >
+            <Link to="/auth">
+              <User className="h-5 w-5" />
+            </Link>
           </Button>
           <Button variant="ghost" size="icon" className="md:hidden">
             <Menu className="h-5 w-5" />
