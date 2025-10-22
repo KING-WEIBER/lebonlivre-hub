@@ -3,6 +3,7 @@ import { Footer } from "@/components/Footer";
 import { BookCard } from "@/components/BookCard";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Star, Shield, Truck } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-bg.jpg";
 import book1 from "@/assets/book1.jpg";
 import book2 from "@/assets/book2.jpg";
@@ -36,6 +37,8 @@ const featuredBooks = [
 ];
 
 const Index = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -61,6 +64,7 @@ const Index = () => {
             <Button 
               size="lg" 
               className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold text-lg px-8 py-6 transition-spring"
+              onClick={() => navigate("/catalog")}
             >
               Explorer le catalogue
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -69,6 +73,7 @@ const Index = () => {
               size="lg" 
               variant="outline"
               className="border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary font-semibold text-lg px-8 py-6 transition-spring"
+              onClick={() => navigate("/about")}
             >
               En savoir plus
             </Button>
@@ -135,6 +140,7 @@ const Index = () => {
             <Button 
               size="lg"
               className="bg-primary hover:bg-primary/90 transition-smooth"
+              onClick={() => navigate("/catalog")}
             >
               Voir tous les livres
               <ArrowRight className="ml-2 h-5 w-5" />
