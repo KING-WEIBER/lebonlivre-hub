@@ -53,7 +53,12 @@ export const Header = () => {
           <Button variant="ghost" size="icon" className="transition-smooth hover:text-accent">
             <Search className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="transition-smooth hover:text-accent">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="transition-smooth hover:text-accent"
+            onClick={() => navigate("/cart")}
+          >
             <ShoppingCart className="h-5 w-5" />
           </Button>
           <Button 
