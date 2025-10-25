@@ -2,17 +2,26 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Users, BookOpen, ShoppingBag, MessageSquare, BarChart3, Shield } from "lucide-react";
+import { Users, BookOpen, ShoppingBag, MessageSquare, Shield } from "lucide-react";
+import { UsersManagement } from "@/components/admin/UsersManagement";
+import { BooksManagement } from "@/components/admin/BooksManagement";
+import { OrdersManagement } from "@/components/admin/OrdersManagement";
+import { MessagesManagement } from "@/components/admin/MessagesManagement";
 
 export default function Admin() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [stats, setStats] = useState({
+    users: 0,
+    books: 0,
+    orders: 0,
+    messages: 0,
+  });
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -47,6 +56,22 @@ export default function Admin() {
       }
 
       setIsAdmin(true);
+      
+      // Charger les statistiques
+      const [usersCount, booksCount, ordersCount, messagesCount] = await Promise.all([
+        supabase.from("profiles").select("*", { count: "exact", head: true }),
+        supabase.from("livres").select("*", { count: "exact", head: true }),
+        supabase.from("commandes").select("*", { count: "exact", head: true }),
+        supabase.from("messages").select("*", { count: "exact", head: true }),
+      ]);
+
+      setStats({
+        users: usersCount.count || 0,
+        books: booksCount.count || 0,
+        orders: ordersCount.count || 0,
+        messages: messagesCount.count || 0,
+      });
+
       setLoading(false);
     };
 
@@ -89,7 +114,7 @@ export default function Admin() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">0</div>
+                <div className="text-2xl font-bold">{stats.users}</div>
                 <p className="text-xs text-muted-foreground">Total d'utilisateurs inscrits</p>
               </CardContent>
             </Card>
@@ -100,7 +125,7 @@ export default function Admin() {
                 <BookOpen className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">0</div>
+                <div className="text-2xl font-bold">{stats.books}</div>
                 <p className="text-xs text-muted-foreground">Livres dans le catalogue</p>
               </CardContent>
             </Card>
@@ -111,7 +136,7 @@ export default function Admin() {
                 <ShoppingBag className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">0</div>
+                <div className="text-2xl font-bold">{stats.orders}</div>
                 <p className="text-xs text-muted-foreground">Commandes en cours</p>
               </CardContent>
             </Card>
@@ -122,7 +147,7 @@ export default function Admin() {
                 <MessageSquare className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">0</div>
+                <div className="text-2xl font-bold">{stats.messages}</div>
                 <p className="text-xs text-muted-foreground">Messages non lus</p>
               </CardContent>
             </Card>
@@ -139,85 +164,47 @@ export default function Admin() {
             </TabsList>
 
             <TabsContent value="users" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Gestion des Utilisateurs</CardTitle>
-                  <CardDescription>
-                    Gérez les comptes utilisateurs et leurs rôles
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Fonctionnalité en cours de développement...
-                  </p>
-                </CardContent>
-              </Card>
+              <UsersManagement />
             </TabsContent>
 
             <TabsContent value="books" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Gestion des Livres</CardTitle>
-                  <CardDescription>
-                    Approuvez, modifiez ou supprimez les annonces de livres
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Fonctionnalité en cours de développement...
-                  </p>
-                </CardContent>
-              </Card>
+              <BooksManagement />
             </TabsContent>
 
             <TabsContent value="orders" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Gestion des Commandes</CardTitle>
-                  <CardDescription>
-                    Suivez et gérez toutes les commandes de la plateforme
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Fonctionnalité en cours de développement...
-                  </p>
-                </CardContent>
-              </Card>
+              <OrdersManagement />
             </TabsContent>
 
             <TabsContent value="reviews" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Modération des Avis</CardTitle>
-                  <CardDescription>
-                    Consultez et modérez les avis des utilisateurs
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Fonctionnalité en cours de développement...
-                  </p>
-                </CardContent>
-              </Card>
+              <MessagesManagement />
             </TabsContent>
 
             <TabsContent value="stats" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Statistiques</CardTitle>
-                  <CardDescription>
-                    Consultez les statistiques globales de la plateforme
-                  </CardDescription>
+                  <CardTitle>Statistiques de la plateforme</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-accent" />
-                    <span className="font-medium">Activité de la plateforme</span>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-4 border rounded-lg">
+                        <p className="text-sm text-muted-foreground">Utilisateurs actifs</p>
+                        <p className="text-2xl font-bold">{stats.users}</p>
+                      </div>
+                      <div className="p-4 border rounded-lg">
+                        <p className="text-sm text-muted-foreground">Livres disponibles</p>
+                        <p className="text-2xl font-bold">{stats.books}</p>
+                      </div>
+                      <div className="p-4 border rounded-lg">
+                        <p className="text-sm text-muted-foreground">Commandes traitées</p>
+                        <p className="text-2xl font-bold">{stats.orders}</p>
+                      </div>
+                      <div className="p-4 border rounded-lg">
+                        <p className="text-sm text-muted-foreground">Messages reçus</p>
+                        <p className="text-2xl font-bold">{stats.messages}</p>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-muted-foreground">
-                    Fonctionnalité en cours de développement...
-                  </p>
                 </CardContent>
               </Card>
             </TabsContent>
