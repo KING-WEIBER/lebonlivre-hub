@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ShoppingCart } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
 
 interface BookCardProps {
   id: string;
@@ -13,6 +14,19 @@ interface BookCardProps {
 }
 
 export const BookCard = ({ id, title, author, price, image, category }: BookCardProps) => {
+  const { addToCart } = useCart();
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    addToCart({
+      id,
+      titre: title,
+      auteur: author,
+      prix: price,
+      image,
+    });
+  };
+
   return (
     <Card className="group overflow-hidden transition-all duration-300 hover:shadow-elegant hover:-translate-y-1">
       <Link to={`/book/${id}`}>
@@ -41,6 +55,7 @@ export const BookCard = ({ id, title, author, price, image, category }: BookCard
           <Button 
             size="sm" 
             className="bg-primary hover:bg-primary/90 transition-smooth"
+            onClick={handleAddToCart}
           >
             <ShoppingCart className="h-4 w-4 mr-2" />
             Ajouter

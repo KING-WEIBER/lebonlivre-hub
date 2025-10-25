@@ -1,12 +1,15 @@
 import { Link, useNavigate } from "react-router-dom";
 import { ShoppingCart, Search, Menu, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useCart } from "@/contexts/CartContext";
 import logo from "@/assets/logo.png";
 
 export const Header = () => {
   const navigate = useNavigate();
+  const { totalItems } = useCart();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
@@ -56,10 +59,18 @@ export const Header = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="transition-smooth hover:text-accent"
+            className="transition-smooth hover:text-accent relative"
             onClick={() => navigate("/cart")}
           >
             <ShoppingCart className="h-5 w-5" />
+            {totalItems > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+              >
+                {totalItems}
+              </Badge>
+            )}
           </Button>
           <Button 
             variant="ghost" 

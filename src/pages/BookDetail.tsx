@@ -5,17 +5,19 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ShoppingCart, Heart, Share2, Star, Truck, Shield } from "lucide-react";
 import { useParams } from "react-router-dom";
+import { useCart } from "@/contexts/CartContext";
 import book1 from "@/assets/book1.jpg";
 
 const BookDetail = () => {
   const { id } = useParams();
+  const { addToCart } = useCart();
 
   // Mock data - will be replaced with real data later
   const book = {
     id: "1",
-    title: "Les Mystères de Paris",
-    author: "Marie Dufresne",
-    price: 24.99,
+    titre: "Les Mystères de Paris",
+    auteur: "Marie Dufresne",
+    prix: 24.99,
     image: book1,
     category: "Roman Classique",
     isbn: "978-2-1234-5678-9",
@@ -27,6 +29,16 @@ const BookDetail = () => {
     inStock: true,
     rating: 4.5,
     reviews: 127,
+  };
+
+  const handleAddToCart = () => {
+    addToCart({
+      id: book.id,
+      titre: book.titre,
+      auteur: book.auteur,
+      prix: book.prix,
+      image: book.image,
+    });
   };
 
   return (
@@ -42,7 +54,7 @@ const BookDetail = () => {
                 <div className="aspect-[3/4] overflow-hidden rounded-lg shadow-elegant bg-secondary/20">
                   <img
                     src={book.image}
-                    alt={book.title}
+                    alt={book.titre}
                     className="h-full w-full object-cover"
                   />
                 </div>
@@ -56,10 +68,10 @@ const BookDetail = () => {
                   {book.category}
                 </Badge>
                 <h1 className="text-4xl md:text-5xl font-serif font-bold mb-2">
-                  {book.title}
+                  {book.titre}
                 </h1>
                 <p className="text-xl text-muted-foreground">
-                  par <span className="text-foreground font-medium">{book.author}</span>
+                  par <span className="text-foreground font-medium">{book.auteur}</span>
                 </p>
               </div>
 
@@ -87,7 +99,7 @@ const BookDetail = () => {
               {/* Price and Actions */}
               <div className="space-y-4">
                 <div className="flex items-baseline gap-3">
-                  <span className="text-5xl font-bold text-accent">{book.price}€</span>
+                  <span className="text-5xl font-bold text-accent">{book.prix}€</span>
                   <span className="text-muted-foreground line-through">29.99€</span>
                 </div>
 
@@ -104,6 +116,7 @@ const BookDetail = () => {
                   <Button 
                     size="lg" 
                     className="flex-1 bg-primary hover:bg-primary/90 text-lg py-6 transition-smooth"
+                    onClick={handleAddToCart}
                   >
                     <ShoppingCart className="mr-2 h-5 w-5" />
                     Ajouter au panier
