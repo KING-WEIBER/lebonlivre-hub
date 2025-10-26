@@ -35,12 +35,24 @@ export default function Checkout() {
         return;
       }
 
+      // Récupérer les infos des livres pour obtenir le vendeur_id
+      const bookIds = items.map(item => item.id);
+      const { data: books, error: booksError } = await supabase
+        .from("livres")
+        .select("id, vendeur_id")
+        .in("id", bookIds);
+
+      if (booksError) throw booksError;
+
       // Créer une commande pour chaque livre
       for (const item of items) {
+        const book = books?.find(b => b.id === item.id);
+        if (!book) continue;
+
         const { error } = await supabase.from("commandes").insert({
           acheteur_id: user.id,
           livre_id: item.id,
-          vendeur_id: user.id, // À remplacer par le vrai vendeur_id du livre
+          vendeur_id: book.vendeur_id,
           montant_total: item.prix * item.quantity,
           mode_paiement: formData.modePaiement as any,
           statut: "en_attente",

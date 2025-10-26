@@ -1,16 +1,18 @@
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ShoppingCart, Search, Menu, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
+import { SearchDialog } from "@/components/SearchDialog";
 import logo from "@/assets/logo.png";
 
 export const Header = () => {
   const navigate = useNavigate();
   const { totalItems } = useCart();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     // Check initial auth state
@@ -53,7 +55,12 @@ export const Header = () => {
         </nav>
 
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="transition-smooth hover:text-accent">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="transition-smooth hover:text-accent"
+            onClick={() => setSearchOpen(true)}
+          >
             <Search className="h-5 w-5" />
           </Button>
           <Button 
@@ -85,6 +92,7 @@ export const Header = () => {
           </Button>
         </div>
       </div>
+      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
     </header>
   );
 };

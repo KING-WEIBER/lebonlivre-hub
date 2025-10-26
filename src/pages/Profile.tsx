@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { User, Mail, Phone, Shield, LogOut, Settings } from "lucide-react";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { EditProfileDialog } from "@/components/EditProfileDialog";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export default function Profile() {
   const [profile, setProfile] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   useEffect(() => {
     // Vérifier la session et charger le profil
@@ -63,6 +65,21 @@ export default function Profile() {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const handleProfileUpdated = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+
+      if (profileData) {
+        setProfile(profileData);
+      }
+    }
+  };
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -155,7 +172,11 @@ export default function Profile() {
                   </div>
                 </div>
 
-                <Button className="w-full" variant="outline">
+                <Button 
+                  className="w-full" 
+                  variant="outline"
+                  onClick={() => setEditDialogOpen(true)}
+                >
                   <Settings className="mr-2 h-4 w-4" />
                   Modifier le profil
                 </Button>
@@ -207,6 +228,12 @@ export default function Profile() {
         </div>
       </main>
       <Footer />
+      <EditProfileDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        profile={profile}
+        onProfileUpdated={handleProfileUpdated}
+      />
     </>
   );
 }

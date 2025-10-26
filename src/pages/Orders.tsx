@@ -6,21 +6,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { Package, Eye } from "lucide-react";
+import { Package, Eye, ShoppingBag } from "lucide-react";
+import { OrderStatusBadge } from "@/components/OrderStatusBadge";
+import { OrderTrackingSteps } from "@/components/OrderTrackingSteps";
 
 interface Order {
   id: string;
   date_creation: string;
   montant_total: number;
   statut: string;
+  mode_paiement: string;
+  livre_id: string;
   livre_titre?: string;
+  livre_auteur?: string;
+  livre_prix?: number;
 }
 
 export default function Orders() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     const loadOrders = async () => {
@@ -163,6 +171,74 @@ export default function Orders() {
         </div>
       </main>
       <Footer />
+      
+      <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Suivi de commande #{selectedOrder?.id.slice(0, 8)}</DialogTitle>
+          </DialogHeader>
+          {selectedOrder && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4 p-4 bg-secondary/20 rounded-lg">
+                <div>
+                  <p className="text-sm text-muted-foreground">Date de commande</p>
+                  <p className="font-medium">
+                    {new Date(selectedOrder.date_creation).toLocaleDateString("fr-FR", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Montant total</p>
+                  <p className="font-medium text-accent">{selectedOrder.montant_total.toFixed(2)}€</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Mode de paiement</p>
+                  <p className="font-medium">
+                    {selectedOrder.mode_paiement === "espèces" ? "Espèces à la livraison" : selectedOrder.mode_paiement}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Statut actuel</p>
+                  <OrderStatusBadge status={selectedOrder.statut} />
+                </div>
+              </div>
+              
+              {selectedOrder.livre_titre && (
+                <div className="p-4 border rounded-lg">
+                  <h4 className="font-semibold mb-2">Article commandé</h4>
+                  <p className="text-sm">
+                    <span className="font-medium">{selectedOrder.livre_titre}</span>
+                    {selectedOrder.livre_auteur && (
+                      <span className="text-muted-foreground"> - {selectedOrder.livre_auteur}</span>
+                    )}
+                  </p>
+                  {selectedOrder.livre_prix && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Prix unitaire: {selectedOrder.livre_prix.toFixed(2)}€
+                    </p>
+                  )}
+                </div>
+              )}
+              
+              <div>
+                <h4 className="font-semibold mb-4">Statut de livraison</h4>
+                <OrderTrackingSteps currentStatus={selectedOrder.statut} />
+              </div>
+              
+              {selectedOrder.statut === "livrée" && (
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800">
+                    ✅ Votre commande est prête à être récupérée. Vous pouvez venir la retirer et régler le paiement sur place.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
