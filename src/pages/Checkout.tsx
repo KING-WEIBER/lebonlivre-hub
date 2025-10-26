@@ -7,20 +7,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle } from "lucide-react";
 
 export default function Checkout() {
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [orderId, setOrderId] = useState("");
   const [formData, setFormData] = useState({
     nom: "",
     adresse: "",
     telephone: "",
-    modePaiement: "carte",
+    modePaiement: "espèces",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,24 +70,35 @@ export default function Checkout() {
         if (error) throw error;
       }
 
+      // Récupérer le premier ID de commande pour l'affichage
+      if (books && books.length > 0) {
+        const firstBook = books[0];
+        const { data: orderData } = await supabase
+          .from("commandes")
+          .select("id")
+          .eq("acheteur_id", user.id)
+          .eq("livre_id", items[0].id)
+          .order("date_creation", { ascending: false })
+          .limit(1)
+          .single();
+
+        if (orderData) {
+          setOrderId(orderData.id);
+        }
+      }
+
       // Créer une notification
       const { error: notifError } = await supabase.from("notifications").insert({
         utilisateur_id: user.id,
         type: "commande",
         titre: "Commande confirmée",
-        message: `Votre commande de ${items.length} article(s) a été confirmée avec succès.`,
+        message: `Votre commande de ${items.length} article(s) a été confirmée avec succès. Mode de paiement : ${formData.modePaiement}. Vous serez notifié à chaque étape de la livraison.`,
       });
 
       if (notifError) console.error("Erreur notification:", notifError);
 
       clearCart();
-      
-      toast({
-        title: "Commande confirmée ! 🎉",
-        description: "Un reçu vous a été envoyé. Vous pouvez suivre votre commande dans l'onglet Mes commandes.",
-      });
-
-      navigate("/orders");
+      setShowSuccess(true);
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -88,6 +108,11 @@ export default function Checkout() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSuccessClose = () => {
+    setShowSuccess(false);
+    navigate("/orders");
   };
 
   if (items.length === 0) {
@@ -148,8 +173,8 @@ export default function Checkout() {
                       value={formData.modePaiement}
                       onChange={(e) => setFormData({ ...formData, modePaiement: e.target.value })}
                     >
-                      <option value="carte">Carte bancaire</option>
-                      <option value="espèces">Espèces</option>
+                      <option value="espèces">Espèces à la livraison</option>
+                      <option value="carte">Carte bancaire (à la récupération)</option>
                       <option value="virement">Virement</option>
                     </select>
                   </div>
@@ -207,6 +232,41 @@ export default function Checkout() {
         </div>
       </main>
       <Footer />
+
+      <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex justify-center mb-4">
+              <div className="rounded-full bg-green-100 p-3">
+                <CheckCircle className="h-12 w-12 text-green-600" />
+              </div>
+            </div>
+            <DialogTitle className="text-center text-2xl">
+              Commande confirmée !
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              Votre commande a été enregistrée avec succès.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-secondary/20 p-4 rounded-lg">
+              <p className="text-sm text-muted-foreground mb-2">Numéro de commande</p>
+              <p className="font-mono font-semibold">{orderId.slice(0, 8).toUpperCase()}</p>
+            </div>
+            <div className="space-y-2 text-sm">
+              <p>✅ Votre commande a été enregistrée</p>
+              <p>📧 Un reçu vous a été envoyé</p>
+              <p>🚚 Vous recevrez des notifications à chaque étape</p>
+              <p className="font-medium mt-4 text-accent">
+                Mode de paiement : {formData.modePaiement === "espèces" ? "Espèces à la livraison" : formData.modePaiement}
+              </p>
+            </div>
+            <Button className="w-full" onClick={handleSuccessClose}>
+              Voir mes commandes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

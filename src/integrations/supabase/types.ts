@@ -407,7 +407,13 @@ export type Database = {
       app_role: "utilisateur" | "administrateur"
       etat_livre: "neuf" | "bon" | "usé"
       mode_paiement: "espèces" | "autre"
-      statut_commande: "en_attente" | "confirmée" | "livrée" | "annulée"
+      statut_commande:
+        | "en_attente"
+        | "confirmée"
+        | "livrée"
+        | "annulée"
+        | "en_preparation"
+        | "expédiée"
       statut_livre: "disponible" | "vendu" | "réservé"
       type_avis: "livre" | "vendeur"
       type_notification: "commande" | "message" | "systeme"
@@ -541,7 +547,14 @@ export const Constants = {
       app_role: ["utilisateur", "administrateur"],
       etat_livre: ["neuf", "bon", "usé"],
       mode_paiement: ["espèces", "autre"],
-      statut_commande: ["en_attente", "confirmée", "livrée", "annulée"],
+      statut_commande: [
+        "en_attente",
+        "confirmée",
+        "livrée",
+        "annulée",
+        "en_preparation",
+        "expédiée",
+      ],
       statut_livre: ["disponible", "vendu", "réservé"],
       type_avis: ["livre", "vendeur"],
       type_notification: ["commande", "message", "systeme"],

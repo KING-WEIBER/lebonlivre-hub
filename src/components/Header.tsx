@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingCart, Search, Menu, User } from "lucide-react";
+import { ShoppingCart, Search, Menu, User, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,20 +13,39 @@ export const Header = () => {
   const { totalItems } = useCart();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
     // Check initial auth state
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
+      if (session) {
+        loadUnreadNotifications(session.user.id);
+      }
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
+      if (session) {
+        loadUnreadNotifications(session.user.id);
+      } else {
+        setUnreadNotifications(0);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const loadUnreadNotifications = async (userId: string) => {
+    const { count } = await supabase
+      .from("notifications")
+      .select("*", { count: "exact", head: true })
+      .eq("utilisateur_id", userId)
+      .eq("lu", false);
+
+    setUnreadNotifications(count || 0);
+  };
 
   const handleUserClick = () => {
     navigate(isAuthenticated ? "/profile" : "/auth");
@@ -79,6 +98,24 @@ export const Header = () => {
               </Badge>
             )}
           </Button>
+          {isAuthenticated && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="transition-smooth hover:text-accent relative"
+              onClick={() => navigate("/notifications")}
+            >
+              <Bell className="h-5 w-5" />
+              {unreadNotifications > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                >
+                  {unreadNotifications}
+                </Badge>
+              )}
+            </Button>
+          )}
           <Button 
             variant="ghost" 
             size="icon" 

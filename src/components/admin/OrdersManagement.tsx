@@ -33,7 +33,7 @@ interface Order {
   acheteur_id: string;
   livre_id: string;
   montant_total: number;
-  statut: string;
+  statut: "en_attente" | "confirmée" | "en_preparation" | "expédiée" | "livrée" | "annulée";
   date_creation: string;
   mode_paiement: string;
 }
@@ -68,7 +68,7 @@ export function OrdersManagement() {
     setLoading(false);
   };
 
-  const handleStatusChange = async (orderId: string, newStatus: "en_attente" | "confirmée" | "annulée" | "livrée") => {
+  const handleStatusChange = async (orderId: string, newStatus: Order["statut"]) => {
     const { error } = await supabase
       .from("commandes")
       .update({ statut: newStatus })
@@ -83,10 +83,22 @@ export function OrdersManagement() {
     } else {
       toast({
         title: "Succès",
-        description: "Statut modifié avec succès",
+        description: `Statut modifié : ${getStatusLabel(newStatus)}. Le client recevra une notification.`,
       });
       fetchOrders();
     }
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      en_attente: "En attente",
+      confirmée: "Confirmée",
+      en_preparation: "En préparation",
+      expédiée: "Expédiée",
+      livrée: "Livrée / Prête",
+      annulée: "Annulée",
+    };
+    return labels[status] || status;
   };
 
   const filteredOrders = orders.filter((order) => {
@@ -100,8 +112,11 @@ export function OrdersManagement() {
       case "confirmée":
       case "livrée":
         return "default";
-      case "en_attente":
+      case "en_preparation":
+      case "expédiée":
         return "secondary";
+      case "en_attente":
+        return "outline";
       case "annulée":
         return "destructive";
       default:
@@ -129,8 +144,10 @@ export function OrdersManagement() {
             <SelectItem value="tous">Tous</SelectItem>
             <SelectItem value="en_attente">En attente</SelectItem>
             <SelectItem value="confirmée">Confirmée</SelectItem>
+            <SelectItem value="en_preparation">En préparation</SelectItem>
+            <SelectItem value="expédiée">Expédiée</SelectItem>
             <SelectItem value="annulée">Annulée</SelectItem>
-            <SelectItem value="livrée">Livrée</SelectItem>
+            <SelectItem value="livrée">Livrée / Prête</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -176,18 +193,20 @@ export function OrdersManagement() {
                   <TableCell>
                     <Select
                       value={order.statut}
-                      onValueChange={(value) => handleStatusChange(order.id, value as "en_attente" | "confirmée" | "annulée" | "livrée")}
+                      onValueChange={(value) => handleStatusChange(order.id, value as Order["statut"])}
                     >
-                      <SelectTrigger className="w-32">
+                      <SelectTrigger className="w-40">
                         <Badge variant={getStatusVariant(order.statut)} className="cursor-pointer">
-                          {order.statut.replace("_", " ")}
+                          {getStatusLabel(order.statut)}
                         </Badge>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="en_attente">En attente</SelectItem>
                         <SelectItem value="confirmée">Confirmée</SelectItem>
+                        <SelectItem value="en_preparation">En préparation</SelectItem>
+                        <SelectItem value="expédiée">Expédiée</SelectItem>
+                        <SelectItem value="livrée">Livrée / Prête</SelectItem>
                         <SelectItem value="annulée">Annulée</SelectItem>
-                        <SelectItem value="livrée">Livrée</SelectItem>
                       </SelectContent>
                     </Select>
                   </TableCell>

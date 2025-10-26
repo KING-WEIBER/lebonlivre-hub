@@ -208,6 +208,23 @@ export default function Profile() {
                   </div>
                 </div>
 
+                <div className="space-y-2 mt-4">
+                  <Button 
+                    className="w-full" 
+                    variant="outline"
+                    onClick={() => navigate("/orders")}
+                  >
+                    Mes commandes
+                  </Button>
+                  <Button 
+                    className="w-full" 
+                    variant="outline"
+                    onClick={() => navigate("/notifications")}
+                  >
+                    Mes notifications
+                  </Button>
+                </div>
+
                 {isAdmin && (
                   <div className="mt-6 p-4 border border-accent/20 rounded-lg bg-accent/5">
                     <h4 className="font-semibold mb-2 flex items-center gap-2">
