@@ -57,6 +57,7 @@ export function BooksManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteBookId, setDeleteBookId] = useState<string | null>(null);
   const [editBook, setEditBook] = useState<Book | null>(null);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     titre: "",
     auteur: "",
@@ -157,6 +158,46 @@ export function BooksManagement() {
     }
   };
 
+  const handleAdd = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase
+      .from("livres")
+      .insert({
+        titre: formData.titre,
+        auteur: formData.auteur,
+        prix: formData.prix,
+        description: formData.description,
+        etat: formData.etat,
+        statut: formData.statut,
+        vendeur_id: user.id,
+      });
+
+    if (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'ajouter le livre",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Succès",
+        description: "Livre ajouté avec succès",
+      });
+      fetchBooks();
+      setAddDialogOpen(false);
+      setFormData({
+        titre: "",
+        auteur: "",
+        prix: 0,
+        description: "",
+        etat: "bon",
+        statut: "disponible",
+      });
+    }
+  };
+
   const filteredBooks = books.filter(
     (book) =>
       book.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -175,6 +216,10 @@ export function BooksManagement() {
             className="pl-10"
           />
         </div>
+        <Button onClick={() => setAddDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Ajouter un livre
+        </Button>
       </div>
 
       <div className="border rounded-lg">
@@ -323,6 +368,94 @@ export function BooksManagement() {
               Annuler
             </Button>
             <Button onClick={handleUpdate}>Enregistrer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog d'ajout */}
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Ajouter un livre</DialogTitle>
+            <DialogDescription>
+              Ajoutez un nouveau livre au catalogue
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="add-titre">Titre</Label>
+              <Input
+                id="add-titre"
+                value={formData.titre}
+                onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="add-auteur">Auteur</Label>
+              <Input
+                id="add-auteur"
+                value={formData.auteur}
+                onChange={(e) => setFormData({ ...formData, auteur: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="add-prix">Prix (€)</Label>
+              <Input
+                id="add-prix"
+                type="number"
+                step="0.01"
+                value={formData.prix}
+                onChange={(e) => setFormData({ ...formData, prix: parseFloat(e.target.value) })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="add-description">Description</Label>
+              <Textarea
+                id="add-description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="add-etat">État</Label>
+                <Select
+                  value={formData.etat}
+                  onValueChange={(value) => setFormData({ ...formData, etat: value as "bon" | "neuf" | "usé" })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="neuf">Neuf</SelectItem>
+                    <SelectItem value="bon">Bon</SelectItem>
+                    <SelectItem value="usé">Usé</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="add-statut">Statut</Label>
+                <Select
+                  value={formData.statut}
+                  onValueChange={(value) => setFormData({ ...formData, statut: value as "disponible" | "réservé" | "vendu" })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="disponible">Disponible</SelectItem>
+                    <SelectItem value="vendu">Vendu</SelectItem>
+                    <SelectItem value="réservé">Réservé</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleAdd}>Ajouter</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

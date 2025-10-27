@@ -190,21 +190,21 @@ export default function Profile() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 rounded-lg bg-secondary/50">
+                  <div className="p-4 rounded-lg bg-secondary/50 cursor-pointer hover:bg-secondary/70 transition-colors" onClick={() => navigate("/orders")}>
                     <p className="text-sm text-muted-foreground">Commandes</p>
-                    <p className="text-2xl font-bold">0</p>
+                    <p className="text-2xl font-bold">-</p>
                   </div>
-                  <div className="p-4 rounded-lg bg-secondary/50">
+                  <div className="p-4 rounded-lg bg-secondary/50 cursor-pointer hover:bg-secondary/70 transition-colors" onClick={() => navigate("/favorites")}>
                     <p className="text-sm text-muted-foreground">Favoris</p>
-                    <p className="text-2xl font-bold">0</p>
+                    <p className="text-2xl font-bold">-</p>
                   </div>
                   <div className="p-4 rounded-lg bg-secondary/50">
                     <p className="text-sm text-muted-foreground">Avis</p>
-                    <p className="text-2xl font-bold">0</p>
+                    <p className="text-2xl font-bold">-</p>
                   </div>
-                  <div className="p-4 rounded-lg bg-secondary/50">
-                    <p className="text-sm text-muted-foreground">Messages</p>
-                    <p className="text-2xl font-bold">0</p>
+                  <div className="p-4 rounded-lg bg-secondary/50 cursor-pointer hover:bg-secondary/70 transition-colors" onClick={() => navigate("/notifications")}>
+                    <p className="text-sm text-muted-foreground">Notifications</p>
+                    <p className="text-2xl font-bold">-</p>
                   </div>
                 </div>
 
@@ -215,6 +215,13 @@ export default function Profile() {
                     onClick={() => navigate("/orders")}
                   >
                     Mes commandes
+                  </Button>
+                  <Button 
+                    className="w-full" 
+                    variant="outline"
+                    onClick={() => navigate("/favorites")}
+                  >
+                    Mes favoris
                   </Button>
                   <Button 
                     className="w-full" 

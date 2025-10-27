@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -6,15 +7,23 @@ import { Separator } from "@/components/ui/separator";
 import { ShoppingCart, Heart, Share2, Star, Truck, Shield } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
+import { supabase } from "@/integrations/supabase/client";
+import { ReviewForm } from "@/components/ReviewForm";
+import { ReviewsList } from "@/components/ReviewsList";
+import { toast } from "@/hooks/use-toast";
 import book1 from "@/assets/book1.jpg";
 
 const BookDetail = () => {
   const { id } = useParams();
   const { addToCart } = useCart();
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [averageRating, setAverageRating] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
+  const [reviewsRefresh, setReviewsRefresh] = useState(0);
 
   // Mock data - will be replaced with real data later
   const book = {
-    id: "1",
+    id: id || "1",
     titre: "Les Mystères de Paris",
     auteur: "Marie Dufresne",
     prix: 24.99,
@@ -27,8 +36,86 @@ const BookDetail = () => {
     language: "Français",
     description: "Plongez dans les rues mystérieuses de Paris du XIXe siècle avec ce roman captivant. Marie Dufresne nous offre une fresque historique riche en rebondissements, où se mêlent intrigues politiques, romances interdites et secrets de famille. Une œuvre magistrale qui vous transportera dans une époque révolue, avec une plume élégante et un sens du détail remarquable.",
     inStock: true,
-    rating: 4.5,
-    reviews: 127,
+  };
+
+  useEffect(() => {
+    checkFavorite();
+    fetchRatings();
+  }, [id]);
+
+  const checkFavorite = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || !id) return;
+
+    const { data } = await supabase
+      .from("favoris")
+      .select("id")
+      .eq("utilisateur_id", user.id)
+      .eq("livre_id", id)
+      .maybeSingle();
+
+    setIsFavorite(!!data);
+  };
+
+  const fetchRatings = async () => {
+    if (!id) return;
+
+    const { data, error } = await supabase
+      .from("avis")
+      .select("note")
+      .eq("cible_id", id)
+      .eq("cible_type", "livre");
+
+    if (!error && data) {
+      setReviewCount(data.length);
+      if (data.length > 0) {
+        const avg = data.reduce((sum, review) => sum + review.note, 0) / data.length;
+        setAverageRating(avg);
+      }
+    }
+  };
+
+  const toggleFavorite = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({
+        title: "Erreur",
+        description: "Vous devez être connecté",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isFavorite) {
+      const { error } = await supabase
+        .from("favoris")
+        .delete()
+        .eq("utilisateur_id", user.id)
+        .eq("livre_id", id);
+
+      if (!error) {
+        setIsFavorite(false);
+        toast({
+          title: "Retiré des favoris",
+          description: "Le livre a été retiré de vos favoris",
+        });
+      }
+    } else {
+      const { error } = await supabase
+        .from("favoris")
+        .insert({
+          utilisateur_id: user.id,
+          livre_id: id,
+        });
+
+      if (!error) {
+        setIsFavorite(true);
+        toast({
+          title: "Ajouté aux favoris",
+          description: "Le livre a été ajouté à vos favoris",
+        });
+      }
+    }
   };
 
   const handleAddToCart = () => {
@@ -39,6 +126,11 @@ const BookDetail = () => {
       prix: book.prix,
       image: book.image,
     });
+  };
+
+  const handleReviewAdded = () => {
+    fetchRatings();
+    setReviewsRefresh(prev => prev + 1);
   };
 
   return (
@@ -82,7 +174,7 @@ const BookDetail = () => {
                     <Star
                       key={i}
                       className={`h-5 w-5 ${
-                        i < Math.floor(book.rating)
+                        i < Math.floor(averageRating)
                           ? "fill-accent text-accent"
                           : "text-muted"
                       }`}
@@ -90,7 +182,7 @@ const BookDetail = () => {
                   ))}
                 </div>
                 <span className="text-sm text-muted-foreground">
-                  {book.rating} ({book.reviews} avis)
+                  {averageRating > 0 ? averageRating.toFixed(1) : "Aucune note"} ({reviewCount} avis)
                 </span>
               </div>
 
@@ -121,8 +213,13 @@ const BookDetail = () => {
                     <ShoppingCart className="mr-2 h-5 w-5" />
                     Ajouter au panier
                   </Button>
-                  <Button size="lg" variant="outline" className="transition-smooth">
-                    <Heart className="h-5 w-5" />
+                  <Button 
+                    size="lg" 
+                    variant="outline" 
+                    className="transition-smooth"
+                    onClick={toggleFavorite}
+                  >
+                    <Heart className={`h-5 w-5 ${isFavorite ? "fill-accent text-accent" : ""}`} />
                   </Button>
                   <Button size="lg" variant="outline" className="transition-smooth">
                     <Share2 className="h-5 w-5" />
@@ -193,6 +290,12 @@ const BookDetail = () => {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Reviews Section */}
+          <div className="container mt-16 space-y-8">
+            <ReviewForm bookId={book.id} onReviewAdded={handleReviewAdded} />
+            <ReviewsList bookId={book.id} refreshTrigger={reviewsRefresh} />
           </div>
         </div>
       </main>
