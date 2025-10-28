@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, UserCog, Search, Mail } from "lucide-react";
+import { Trash2, Search, Mail } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { MessageDialog } from "./MessageDialog";
 
 interface User {
   id: string;
@@ -45,6 +46,11 @@ export function UsersManagement() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
+  const [messageDialog, setMessageDialog] = useState<{ open: boolean; userId: string; userName: string }>({
+    open: false,
+    userId: "",
+    userName: "",
+  });
 
   useEffect(() => {
     fetchUsers();
@@ -83,7 +89,7 @@ export function UsersManagement() {
     setLoading(false);
   };
 
-  const handleRoleChange = async (userId: string, newRole: "utilisateur" | "administrateur") => {
+  const handleRoleChange = async (userId: string, newRole: "utilisateur" | "administrateur" | "vendeur") => {
     const { error } = await supabase
       .from("user_roles")
       .update({ role: newRole })
@@ -168,14 +174,14 @@ export function UsersManagement() {
                   <TableCell>
                     <Select
                       value={user.role}
-                      onValueChange={(value) => handleRoleChange(user.id, value as "utilisateur" | "administrateur")}
+                      onValueChange={(value) => handleRoleChange(user.id, value as "utilisateur" | "administrateur" | "vendeur")}
                     >
                       <SelectTrigger className="w-36">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="utilisateur">Utilisateur</SelectItem>
-                        <SelectItem value="moderateur">Modérateur</SelectItem>
+                        <SelectItem value="vendeur">Vendeur</SelectItem>
                         <SelectItem value="administrateur">Administrateur</SelectItem>
                       </SelectContent>
                     </Select>
@@ -189,7 +195,11 @@ export function UsersManagement() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button size="icon" variant="ghost">
+                    <Button 
+                      size="icon" 
+                      variant="ghost"
+                      onClick={() => setMessageDialog({ open: true, userId: user.id, userName: user.nom_complet })}
+                    >
                       <Mail className="h-4 w-4" />
                     </Button>
                     <Button
@@ -223,6 +233,13 @@ export function UsersManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <MessageDialog
+        open={messageDialog.open}
+        onOpenChange={(open) => setMessageDialog({ ...messageDialog, open })}
+        recipientId={messageDialog.userId}
+        recipientName={messageDialog.userName}
+      />
     </div>
   );
 }

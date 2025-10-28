@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -11,15 +12,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { ReviewForm } from "@/components/ReviewForm";
 import { ReviewsList } from "@/components/ReviewsList";
 import { toast } from "@/hooks/use-toast";
+import { ShareDialog } from "@/components/ShareDialog";
 import book1 from "@/assets/book1.jpg";
 
 const BookDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { addToCart } = useCart();
   const [isFavorite, setIsFavorite] = useState(false);
   const [averageRating, setAverageRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
   const [reviewsRefresh, setReviewsRefresh] = useState(0);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   // Mock data - will be replaced with real data later
   const book = {
@@ -39,9 +44,15 @@ const BookDetail = () => {
   };
 
   useEffect(() => {
+    checkAuth();
     checkFavorite();
     fetchRatings();
   }, [id]);
+
+  const checkAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setUser(user);
+  };
 
   const checkFavorite = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -76,13 +87,13 @@ const BookDetail = () => {
   };
 
   const toggleFavorite = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast({
-        title: "Erreur",
-        description: "Vous devez être connecté",
+        title: "Connexion requise",
+        description: "Vous devez être connecté pour gérer vos favoris",
         variant: "destructive",
       });
+      navigate("/auth");
       return;
     }
 
@@ -119,6 +130,15 @@ const BookDetail = () => {
   };
 
   const handleAddToCart = () => {
+    if (!user) {
+      toast({
+        title: "Connexion requise",
+        description: "Vous devez être connecté pour ajouter au panier",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
     addToCart({
       id: book.id,
       titre: book.titre,
@@ -129,6 +149,15 @@ const BookDetail = () => {
   };
 
   const handleReviewAdded = () => {
+    if (!user) {
+      toast({
+        title: "Connexion requise",
+        description: "Vous devez être connecté pour laisser un avis",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
     fetchRatings();
     setReviewsRefresh(prev => prev + 1);
   };
@@ -221,7 +250,12 @@ const BookDetail = () => {
                   >
                     <Heart className={`h-5 w-5 ${isFavorite ? "fill-accent text-accent" : ""}`} />
                   </Button>
-                  <Button size="lg" variant="outline" className="transition-smooth">
+                  <Button 
+                    size="lg" 
+                    variant="outline" 
+                    className="transition-smooth"
+                    onClick={() => setShareDialogOpen(true)}
+                  >
                     <Share2 className="h-5 w-5" />
                   </Button>
                 </div>
@@ -301,6 +335,13 @@ const BookDetail = () => {
       </main>
 
       <Footer />
+      
+      <ShareDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        bookTitle={book.titre}
+        bookId={book.id}
+      />
     </div>
   );
 };

@@ -65,11 +65,23 @@ export function BooksManagement() {
     description: "",
     etat: "bon" as "bon" | "neuf" | "usé",
     statut: "disponible" as "disponible" | "réservé" | "vendu",
+    images: [] as string[],
+    categorie_id: "" as string,
   });
+  const [categories, setCategories] = useState<any[]>([]);
 
   useEffect(() => {
     fetchBooks();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    const { data } = await supabase
+      .from("categories")
+      .select("*")
+      .order("nom");
+    setCategories(data || []);
+  };
 
   useEffect(() => {
     if (editBook) {
@@ -80,6 +92,8 @@ export function BooksManagement() {
         description: "",
         etat: editBook.etat as "bon" | "neuf" | "usé",
         statut: editBook.statut as "disponible" | "réservé" | "vendu",
+        images: [],
+        categorie_id: "",
       });
     }
   }, [editBook]);
@@ -172,6 +186,8 @@ export function BooksManagement() {
         etat: formData.etat,
         statut: formData.statut,
         vendeur_id: user.id,
+        images: formData.images,
+        categorie_id: formData.categorie_id || null,
       });
 
     if (error) {
@@ -194,6 +210,8 @@ export function BooksManagement() {
         description: "",
         etat: "bon",
         statut: "disponible",
+        images: [],
+        categorie_id: "",
       });
     }
   };
@@ -415,6 +433,33 @@ export function BooksManagement() {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="add-image">URL de l'image</Label>
+              <Input
+                id="add-image"
+                placeholder="https://exemple.com/image.jpg"
+                value={formData.images[0] || ""}
+                onChange={(e) => setFormData({ ...formData, images: [e.target.value] })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="add-categorie">Catégorie</Label>
+              <Select
+                value={formData.categorie_id}
+                onValueChange={(value) => setFormData({ ...formData, categorie_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une catégorie" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.nom}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">

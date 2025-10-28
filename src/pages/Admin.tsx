@@ -155,12 +155,12 @@ export default function Admin() {
 
           {/* Management Tabs */}
           <Tabs defaultValue="users" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="users">Utilisateurs</TabsTrigger>
-              <TabsTrigger value="books">Livres</TabsTrigger>
-              <TabsTrigger value="orders">Commandes</TabsTrigger>
-              <TabsTrigger value="reviews">Avis</TabsTrigger>
-              <TabsTrigger value="stats">Statistiques</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="users" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Utilisateurs</TabsTrigger>
+              <TabsTrigger value="books" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Livres</TabsTrigger>
+              <TabsTrigger value="orders" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Commandes</TabsTrigger>
+              <TabsTrigger value="reviews" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Avis</TabsTrigger>
+              <TabsTrigger value="stats" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Statistiques</TabsTrigger>
             </TabsList>
 
             <TabsContent value="users" className="space-y-4">
