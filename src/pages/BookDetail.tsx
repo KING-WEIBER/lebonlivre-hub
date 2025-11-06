@@ -13,6 +13,7 @@ import { ReviewForm } from "@/components/ReviewForm";
 import { ReviewsList } from "@/components/ReviewsList";
 import { toast } from "@/hooks/use-toast";
 import { ShareDialog } from "@/components/ShareDialog";
+import { formatPrice } from "@/lib/utils";
 import book1 from "@/assets/book1.jpg";
 
 const BookDetail = () => {
@@ -220,8 +221,7 @@ const BookDetail = () => {
               {/* Price and Actions */}
               <div className="space-y-4">
                 <div className="flex items-baseline gap-3">
-                  <span className="text-5xl font-bold text-accent">{book.prix}€</span>
-                  <span className="text-muted-foreground line-through">29.99€</span>
+                  <span className="text-5xl font-bold text-accent">{formatPrice(book.prix)}</span>
                 </div>
 
                 {book.inStock ? (

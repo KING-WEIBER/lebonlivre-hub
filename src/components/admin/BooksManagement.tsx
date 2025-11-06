@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Upload } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -69,6 +70,8 @@ export function BooksManagement() {
     categorie_id: "" as string,
   });
   const [categories, setCategories] = useState<any[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchBooks();
@@ -172,9 +175,62 @@ export function BooksManagement() {
     }
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({
+        title: "Erreur",
+        description: "Vous devez être connecté",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}/${Math.random()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('book-covers')
+      .upload(fileName, file);
+
+    if (uploadError) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de télécharger l'image",
+        variant: "destructive",
+      });
+      setUploading(false);
+      return;
+    }
+
+    const { data } = supabase.storage
+      .from('book-covers')
+      .getPublicUrl(fileName);
+
+    setFormData({ ...formData, images: [data.publicUrl] });
+    setUploading(false);
+    toast({
+      title: "Succès",
+      description: "Image téléchargée avec succès",
+    });
+  };
+
   const handleAdd = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
+
+    if (!formData.titre || !formData.auteur || formData.prix <= 0) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs obligatoires",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const { error } = await supabase
       .from("livres")
@@ -392,7 +448,7 @@ export function BooksManagement() {
 
       {/* Dialog d'ajout */}
       <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Ajouter un livre</DialogTitle>
             <DialogDescription>
@@ -435,13 +491,32 @@ export function BooksManagement() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="add-image">URL de l'image</Label>
-              <Input
-                id="add-image"
-                placeholder="https://exemple.com/image.jpg"
-                value={formData.images[0] || ""}
-                onChange={(e) => setFormData({ ...formData, images: [e.target.value] })}
-              />
+              <Label htmlFor="add-image">Image de couverture</Label>
+              <div className="flex gap-2">
+                <Input
+                  ref={fileInputRef}
+                  id="add-image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="w-full"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {uploading ? "Téléchargement..." : formData.images[0] ? "Changer l'image" : "Télécharger une image"}
+                </Button>
+              </div>
+              {formData.images[0] && (
+                <div className="mt-2">
+                  <img src={formData.images[0]} alt="Aperçu" className="h-32 w-24 object-cover rounded" />
+                </div>
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="add-categorie">Catégorie</Label>

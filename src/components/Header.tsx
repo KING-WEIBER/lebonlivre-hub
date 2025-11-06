@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ShoppingCart, Search, Menu, User, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,10 +10,13 @@ import logo from "@/assets/logo.png";
 
 export const Header = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { totalItems } = useCart();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+  const isActive = (path: string) => location.pathname === path;
 
   useEffect(() => {
     // Check initial auth state
@@ -59,16 +62,36 @@ export const Header = () => {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
-          <Link to="/" className="text-sm font-medium transition-smooth hover:text-accent">
+          <Link 
+            to="/" 
+            className={`text-sm font-medium transition-smooth hover:text-accent ${
+              isActive('/') ? 'text-accent border-b-2 border-accent pb-1' : ''
+            }`}
+          >
             Accueil
           </Link>
-          <Link to="/catalog" className="text-sm font-medium transition-smooth hover:text-accent">
+          <Link 
+            to="/catalog" 
+            className={`text-sm font-medium transition-smooth hover:text-accent ${
+              isActive('/catalog') ? 'text-accent border-b-2 border-accent pb-1' : ''
+            }`}
+          >
             Catalogue
           </Link>
-          <Link to="/about" className="text-sm font-medium transition-smooth hover:text-accent">
+          <Link 
+            to="/about" 
+            className={`text-sm font-medium transition-smooth hover:text-accent ${
+              isActive('/about') ? 'text-accent border-b-2 border-accent pb-1' : ''
+            }`}
+          >
             À propos
           </Link>
-          <Link to="/contact" className="text-sm font-medium transition-smooth hover:text-accent">
+          <Link 
+            to="/contact" 
+            className={`text-sm font-medium transition-smooth hover:text-accent ${
+              isActive('/contact') ? 'text-accent border-b-2 border-accent pb-1' : ''
+            }`}
+          >
             Contact
           </Link>
         </nav>
