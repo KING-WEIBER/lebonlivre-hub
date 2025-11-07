@@ -4,40 +4,92 @@ import { BookCard } from "@/components/BookCard";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Star, Shield, Truck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import heroImage from "@/assets/hero-bg.jpg";
-import book1 from "@/assets/book1.jpg";
-import book2 from "@/assets/book2.jpg";
-import book3 from "@/assets/book3.jpg";
 
-const featuredBooks = [
-  {
-    id: "1",
-    title: "Les Mystères de Paris",
-    author: "Marie Dufresne",
-    price: 24.99,
-    image: book1,
-    category: "Roman Classique",
-  },
-  {
-    id: "2",
-    title: "Lumières d'Automne",
-    author: "Laurent Mercier",
-    price: 19.99,
-    image: book2,
-    category: "Littérature Moderne",
-  },
-  {
-    id: "3",
-    title: "Contes d'Or et d'Azur",
-    author: "Sophie Beaumont",
-    price: 29.99,
-    image: book3,
-    category: "Édition de Luxe",
-  },
-];
 
 const Index = () => {
   const navigate = useNavigate();
+  const [featuredBooks, setFeaturedBooks] = useState<any[]>([]);
+  const [booksByCategory, setBooksByCategory] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchFeaturedBooks();
+    fetchBooksByCategory();
+  }, []);
+
+  const fetchFeaturedBooks = async () => {
+    const { data, error } = await supabase
+      .from("livres")
+      .select(`
+        id,
+        titre,
+        auteur,
+        prix,
+        images,
+        categories (nom)
+      `)
+      .eq("a_la_une", true)
+      .eq("statut", "disponible")
+      .limit(6);
+
+    if (!error && data) {
+      setFeaturedBooks(data.map(book => ({
+        id: book.id,
+        title: book.titre,
+        author: book.auteur,
+        price: book.prix,
+        image: book.images && book.images.length > 0 ? book.images[0] : "/placeholder.svg",
+        category: book.categories?.nom || "Sans catégorie"
+      })));
+    }
+  };
+
+  const fetchBooksByCategory = async () => {
+    // Fetch categories
+    const { data: categoriesData } = await supabase
+      .from("categories")
+      .select("*")
+      .limit(4);
+
+    if (categoriesData) {
+      setCategories(categoriesData);
+      
+      // Fetch books for each category
+      const booksPromises = categoriesData.map(async (category) => {
+        const { data } = await supabase
+          .from("livres")
+          .select(`
+            id,
+            titre,
+            auteur,
+            prix,
+            images,
+            categorie_id
+          `)
+          .eq("categorie_id", category.id)
+          .eq("statut", "disponible")
+          .limit(3);
+
+        return {
+          category: category.nom,
+          books: data?.map(book => ({
+            id: book.id,
+            title: book.titre,
+            author: book.auteur,
+            price: book.prix,
+            image: book.images && book.images.length > 0 ? book.images[0] : "/placeholder.svg",
+            category: category.nom
+          })) || []
+        };
+      });
+
+      const booksData = await Promise.all(booksPromises);
+      setBooksByCategory(booksData.filter(cat => cat.books.length > 0));
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -118,36 +170,55 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Books Section */}
-      <section className="py-20">
-        <div className="container">
-          <div className="text-center space-y-4 mb-12 animate-fade-in">
-            <h2 className="text-4xl md:text-5xl font-serif font-bold">
-              Nos Livres en Vedette
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Découvrez notre sélection spéciale de ce mois-ci
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fade-in-up">
-            {featuredBooks.map((book) => (
-              <BookCard key={book.id} {...book} />
-            ))}
-          </div>
+      {/* Featured Books Section - À la une */}
+      {featuredBooks.length > 0 && (
+        <section className="py-20 bg-gradient-to-b from-accent/5 to-transparent">
+          <div className="container">
+            <div className="text-center space-y-4 mb-12 animate-fade-in">
+              <h2 className="text-4xl md:text-5xl font-serif font-bold">
+                À la Une
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Les livres les plus en vogue du moment
+              </p>
+            </div>
 
-          <div className="text-center mt-12">
-            <Button 
-              size="lg"
-              className="bg-primary hover:bg-primary/90 transition-smooth"
-              onClick={() => navigate("/catalog")}
-            >
-              Voir tous les livres
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fade-in-up">
+              {featuredBooks.map((book) => (
+                <BookCard key={book.id} {...book} />
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {/* Books by Category */}
+      {booksByCategory.map((categorySection, index) => (
+        <section key={index} className="py-20">
+          <div className="container">
+            <div className="flex justify-between items-center mb-12 animate-fade-in">
+              <h2 className="text-3xl md:text-4xl font-serif font-bold">
+                {categorySection.category}
+              </h2>
+              <Button 
+                variant="ghost"
+                className="text-accent hover:text-accent/80"
+                onClick={() => navigate("/catalog")}
+              >
+                Voir tout
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fade-in-up">
+              {categorySection.books.map((book: any) => (
+                <BookCard key={book.id} {...book} />
+              ))}
+            </div>
+          </div>
+        </section>
+      ))}
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-primary to-primary/90 text-primary-foreground">

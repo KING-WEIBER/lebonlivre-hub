@@ -50,6 +50,7 @@ interface Book {
   etat: string;
   statut: string;
   vendeur_id: string;
+  a_la_une?: boolean;
 }
 
 export function BooksManagement() {
@@ -68,6 +69,7 @@ export function BooksManagement() {
     statut: "disponible" as "disponible" | "réservé" | "vendu",
     images: [] as string[],
     categorie_id: "" as string,
+    a_la_une: false,
   });
   const [categories, setCategories] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -97,6 +99,7 @@ export function BooksManagement() {
         statut: editBook.statut as "disponible" | "réservé" | "vendu",
         images: [],
         categorie_id: "",
+        a_la_une: editBook.a_la_une || false,
       });
     }
   }, [editBook]);
@@ -156,6 +159,7 @@ export function BooksManagement() {
         description: formData.description,
         etat: formData.etat,
         statut: formData.statut,
+        a_la_une: formData.a_la_une,
       })
       .eq("id", editBook.id);
 
@@ -268,6 +272,7 @@ export function BooksManagement() {
         statut: "disponible",
         images: [],
         categorie_id: "",
+        a_la_une: false,
       });
     }
   };
@@ -436,6 +441,16 @@ export function BooksManagement() {
                 </Select>
               </div>
             </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="edit-a-la-une"
+                checked={formData.a_la_une}
+                onCheckedChange={(checked) => setFormData({ ...formData, a_la_une: checked as boolean })}
+              />
+              <Label htmlFor="edit-a-la-une" className="cursor-pointer">
+                Mettre à la une
+              </Label>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditBook(null)}>
@@ -569,6 +584,16 @@ export function BooksManagement() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="add-a-la-une"
+                checked={formData.a_la_une}
+                onCheckedChange={(checked) => setFormData({ ...formData, a_la_une: checked as boolean })}
+              />
+              <Label htmlFor="add-a-la-une" className="cursor-pointer">
+                Mettre à la une
+              </Label>
             </div>
           </div>
           <DialogFooter>
