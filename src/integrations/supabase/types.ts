@@ -50,6 +50,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "avis_auteur_id_fkey"
+            columns: ["auteur_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       categories: {
@@ -116,6 +123,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "commandes_acheteur_id_fkey"
+            columns: ["acheteur_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "commandes_livre_id_fkey"
             columns: ["livre_id"]
             isOneToOne: false
@@ -127,6 +141,13 @@ export type Database = {
             columns: ["vendeur_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commandes_vendeur_id_fkey"
+            columns: ["vendeur_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -165,6 +186,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "favoris_utilisateur_id_fkey"
+            columns: ["utilisateur_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       historiques: {
@@ -195,6 +223,13 @@ export type Database = {
             columns: ["utilisateur_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historiques_utilisateur_id_fkey"
+            columns: ["utilisateur_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -257,6 +292,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "livres_vendeur_id_fkey"
+            columns: ["vendeur_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       messages: {
@@ -293,10 +335,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "messages_destinataire_id_fkey"
+            columns: ["destinataire_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "messages_expediteur_id_fkey"
             columns: ["expediteur_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_expediteur_id_fkey"
+            columns: ["expediteur_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -335,6 +391,13 @@ export type Database = {
             columns: ["utilisateur_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_utilisateur_id_fkey"
+            columns: ["utilisateur_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -395,7 +458,27 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_profiles: {
+        Row: {
+          id: string | null
+          nom_complet: string | null
+          photo_profil: string | null
+          verifie: boolean | null
+        }
+        Insert: {
+          id?: string | null
+          nom_complet?: string | null
+          photo_profil?: string | null
+          verifie?: boolean | null
+        }
+        Update: {
+          id?: string | null
+          nom_complet?: string | null
+          photo_profil?: string | null
+          verifie?: boolean | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
