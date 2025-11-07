@@ -201,6 +201,7 @@ export type Database = {
       }
       livres: {
         Row: {
+          a_la_une: boolean | null
           auteur: string
           categorie_id: string | null
           date_ajout: string | null
@@ -214,6 +215,7 @@ export type Database = {
           vendeur_id: string
         }
         Insert: {
+          a_la_une?: boolean | null
           auteur: string
           categorie_id?: string | null
           date_ajout?: string | null
@@ -227,6 +229,7 @@ export type Database = {
           vendeur_id: string
         }
         Update: {
+          a_la_une?: boolean | null
           auteur?: string
           categorie_id?: string | null
           date_ajout?: string | null
