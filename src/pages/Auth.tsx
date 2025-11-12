@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Chrome, Facebook, Mail, Lock, User } from "lucide-react";
@@ -15,6 +16,9 @@ export default function Auth() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [resetMode, setResetMode] = useState(false);
+  const [verificationMode, setVerificationMode] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
 
   useEffect(() => {
     // Vérifier si l'utilisateur est déjà connecté
@@ -38,7 +42,7 @@ export default function Auth() {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/profile`,
+        emailRedirectTo: `${window.location.origin}/`,
         data: {
           full_name: fullName,
         },
@@ -51,14 +55,50 @@ export default function Auth() {
         description: error.message,
         variant: "destructive",
       });
+      setLoading(false);
     } else {
+      setVerificationEmail(email);
+      setVerificationMode(true);
       toast({
-        title: "Inscription réussie !",
-        description: "Vous pouvez maintenant vous connecter.",
+        title: "Code de vérification envoyé !",
+        description: "Vérifiez votre email et entrez le code de vérification.",
       });
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (verificationCode.length !== 6) {
+      toast({
+        title: "Code invalide",
+        description: "Le code doit contenir 6 chiffres.",
+        variant: "destructive",
+      });
+      return;
     }
 
-    setLoading(false);
+    setLoading(true);
+
+    const { error } = await supabase.auth.verifyOtp({
+      email: verificationEmail,
+      token: verificationCode,
+      type: "signup",
+    });
+
+    if (error) {
+      toast({
+        title: "Erreur de vérification",
+        description: error.message,
+        variant: "destructive",
+      });
+      setLoading(false);
+    } else {
+      toast({
+        title: "Email vérifié !",
+        description: "Votre compte a été créé avec succès.",
+      });
+      navigate("/");
+    }
   };
 
   const handleEmailSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -152,6 +192,63 @@ export default function Auth() {
 
     setLoading(false);
   };
+
+  if (verificationMode) {
+    return (
+      <>
+        <Header />
+        <main className="min-h-screen py-20 px-4">
+          <div className="container max-w-md mx-auto">
+            <Card>
+              <CardHeader>
+                <CardTitle>Vérification de l'email</CardTitle>
+                <CardDescription>
+                  Entrez le code de vérification à 6 chiffres envoyé à {verificationEmail}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex flex-col items-center gap-4">
+                  <InputOTP
+                    maxLength={6}
+                    value={verificationCode}
+                    onChange={setVerificationCode}
+                  >
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
+                <Button 
+                  onClick={handleVerifyCode} 
+                  className="w-full" 
+                  disabled={loading || verificationCode.length !== 6}
+                >
+                  {loading ? "Vérification..." : "Vérifier le code"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => {
+                    setVerificationMode(false);
+                    setVerificationCode("");
+                  }}
+                >
+                  Retour à l'inscription
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   if (resetMode) {
     return (
